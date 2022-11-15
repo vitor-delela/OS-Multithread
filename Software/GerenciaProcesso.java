@@ -10,7 +10,9 @@ import java.util.Queue;
 
 public class GerenciaProcesso {
     public GerenciaMemoria gerenciaMemoria;
-    public Queue<PCB> listaPCBs;
+    private Queue<PCB> listaPCBs;
+    private Escalonador escalonador;
+
     public int processId = 0;
 
     public GerenciaProcesso(Memory memory) {
@@ -37,6 +39,7 @@ public class GerenciaProcesso {
             ++processId;
 
             listaPCBs.add(processControlBlock);
+            escalonador.setProntos(getProntos());
         } else {
             System.out.println("Sem espaço na memória para criar o processo de ID: " + processId);
             processControlBlock = null;
@@ -49,6 +52,7 @@ public class GerenciaProcesso {
         System.out.println("Processo encerrado: " + processo.id);
         gerenciaMemoria.desaloca(processo.getAllocatedPages());
         listaPCBs.remove(processo);
+        escalonador.setProntos(getProntos());
     }
 
     public PCB getProcessByID(int id) {
@@ -65,6 +69,22 @@ public class GerenciaProcesso {
         for(PCB pcb : listaPCBs){
             System.out.println(pcb.toString());
         }
+    }
+
+    public LinkedList<PCB> getProntos(){
+        LinkedList<PCB> prontos = new LinkedList<>();
+        for(PCB pcb : listaPCBs){
+            if (pcb.status == ProcessStatus.READY) prontos.add(pcb);
+        }
+        return prontos;
+    }
+
+    public LinkedList<PCB> getBloqueados(){
+        LinkedList<PCB> bloqueados = new LinkedList<>();
+        for(PCB pcb : listaPCBs){
+            if (pcb.status == ProcessStatus.BLOCKED) bloqueados.add(pcb);
+        }
+        return bloqueados;
     }
 
     public int getProcessLineFromMemory(int line, int processId){
@@ -89,9 +109,13 @@ public class GerenciaProcesso {
         return -1;
     }
 
-    public void adicionaExisitingPaginaEmProcesso(int pid, int page){
+    public void adicionaExistingPaginaEmProcesso(int pid, int page){
         if (getProcessByID(pid) != null){
             getProcessByID(pid).adicionaNovaPagina(page);
         }
+    }
+
+    public void setEscalonador(Escalonador escalonador) {
+        this.escalonador = escalonador;
     }
 }

@@ -21,7 +21,7 @@ public class VM {
     m = mem.m;
     gerenteProcesso = new GerenciaProcesso(mem);
 
-    cpu = new CPU(mem,ih,sysCall, true, gerenteProcesso.gerenciaMemoria.tamFrame);  // debug true liga debug
+    cpu = new CPU(mem,ih,sysCall, true, gerenteProcesso.gerenciaMemoria.tamFrame, new int[10]);  // debug true liga debug
   }
 
   public PCB criaProcesso(Word[] p){
@@ -38,6 +38,10 @@ public class VM {
 
   public boolean existeProcesso(int pid){
     return gerenteProcesso.hasProcess(pid);
+  }
+
+  public void configEscalonador(){
+    gerenteProcesso.setEscalonador(cpu.getInterruptHandling().getEscalonador());
   }
 
 }
