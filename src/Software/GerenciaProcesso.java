@@ -50,6 +50,9 @@ public class GerenciaProcesso {
 
     public void finish(PCB processo) {
         System.out.println("Processo encerrado: " + processo.id);
+        for(int page : processo.getAllocatedPages()){
+            gerenciaMemoria.memory.dump(page*16, (page+1)*16);
+        }
         gerenciaMemoria.desaloca(processo.getAllocatedPages());
         listaPCBs.remove(processo);
         escalonador.setProntos(getProntos());
