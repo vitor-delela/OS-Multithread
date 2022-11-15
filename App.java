@@ -20,9 +20,10 @@ public class App {
 			System.out.println("4 - Desaloca"); //retira o processo id do sistema
 			System.out.println("5 - DumpM"); //lista a memória entre posições início e fim
 			System.out.println("6 - Executa"); //executa o processo com id fornecido
-			System.out.println("7 - Trace On"); //liga modo de execução em que CPU print cada instrução executada
-			System.out.println("8 - Trace Off"); //desliga o modo acima
-			System.out.println("9 - Exit"); //sai do sistema
+			System.out.println("7 - Executa Escalonador"); //executa o processo com id fornecido
+			System.out.println("8 - Trace On"); //liga modo de execução em que CPU print cada instrução executada
+			System.out.println("9 - Trace Off"); //desliga o modo acima
+			System.out.println("0 - Exit"); //sai do sistema
 			int aux;
 
 			System.out.print("Digite uma opção: ");
@@ -117,11 +118,15 @@ public class App {
 					break;
 
 				case 7:
+					s.runWithEscalonador();
+					break;
+
+				case 8:
 					s.changeDebug(true);
 					System.out.println("Debug On");
 					break;
 
-				case 8:
+				case 9:
 					s.changeDebug(false);
 					System.out.println("Debug Off");
 					break;

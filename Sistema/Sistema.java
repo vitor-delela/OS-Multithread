@@ -3,14 +3,14 @@ package Sistema;
 import Hardware.VM;
 import Hardware.Word;
 import Programas.Programas;
+import Software.Escalonador;
 import Software.InterruptHandling;
 import Software.PCB;
 import Software.SysCallHandling;
 
-// -------------------  S I S T E M A -------------------------------------------------------------------- //
-
 public class Sistema{   // a VM com tratamento de interrupções
     public VM vm;
+	public Escalonador escalonador;
     public InterruptHandling ih;
     public SysCallHandling sysCall;
     public static Programas progs;
@@ -19,13 +19,11 @@ public class Sistema{   // a VM com tratamento de interrupções
         ih = new InterruptHandling();
         sysCall = new SysCallHandling();
         vm = new VM(ih, sysCall);
+		escalonador = new Escalonador(vm.gerenteProcesso.getProntos(), vm.cpu);
 
         sysCall.setVM(vm);
+		ih.setEscalonador(escalonador);
     }
-// -------------------  S I S T E M A - FIM---------------------------------------------------------------- //
-
-// ------------------ U T I L I T A R I O S   D O   S I S T E M A ----------------------------------------- //
-// ------------------ load é invocado a partir de requisição do usuário ----------------------------------- //
 
 	public int carregaPrograma(Word[] programa){
 		return vm.criaProcesso(programa).getId();
@@ -45,9 +43,21 @@ public class Sistema{   // a VM com tratamento de interrupções
 	}
 
 	public void runByProcessId (int pid){
-		vm.cpu.setContext(0, vm.tamMem - 1,
-				getProgramCounterbyProcessId(pid), vm.gerenteProcesso.getProcessByID(pid).getAllocatedPages(), pid); // seta estado da cpu ]
+		vm.cpu.setContext(vm.gerenteProcesso.getProcessByID(pid).getContexto());
 		vm.cpu.run();
+	}
+
+	public void runWithEscalonador() {
+		System.out.println("Iniciando execução dos processos prontos com escalonador");
+		vm.cpu.escalonadorStatus(true);
+		PCB running = null;
+		if (vm.gerenteProcesso.getProntos() != null){
+			running = vm.gerenteProcesso.getProntos().getFirst();
+			vm.cpu.setContext(running.getContexto());
+			vm.cpu.run();
+			System.out.println("---------------------------------- Escalonador executado ");
+		}
+		else System.out.println("Sem processos prontos.");
 	}
 
 	public int getProgramCounterbyProcessId(int pid){

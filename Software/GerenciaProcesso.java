@@ -10,7 +10,8 @@ import java.util.Queue;
 
 public class GerenciaProcesso {
     public GerenciaMemoria gerenciaMemoria;
-    public Queue<PCB> listaPCBs;
+    private Queue<PCB> listaPCBs;
+
     public int processId = 0;
 
     public GerenciaProcesso(Memory memory) {
@@ -67,6 +68,22 @@ public class GerenciaProcesso {
         }
     }
 
+    public LinkedList<PCB> getProntos(){
+        LinkedList<PCB> prontos = new LinkedList<>();
+        for(PCB pcb : listaPCBs){
+            if (pcb.status == ProcessStatus.READY) prontos.add(pcb);
+        }
+        return prontos;
+    }
+
+    public LinkedList<PCB> getBloqueados(){
+        LinkedList<PCB> bloqueados = null;
+        for(PCB pcb : listaPCBs){
+            if (pcb.status == ProcessStatus.BLOCKED) bloqueados.add(pcb);
+        }
+        return bloqueados;
+    }
+
     public int getProcessLineFromMemory(int line, int processId){
         int pageId = getProcessByID(processId).getAllocatedPages().get(line/gerenciaMemoria.tamFrame);
         return pageId*gerenciaMemoria.tamFrame+(line% gerenciaMemoria.tamFrame);
@@ -89,7 +106,7 @@ public class GerenciaProcesso {
         return -1;
     }
 
-    public void adicionaExisitingPaginaEmProcesso(int pid, int page){
+    public void adicionaExistingPaginaEmProcesso(int pid, int page){
         if (getProcessByID(pid) != null){
             getProcessByID(pid).adicionaNovaPagina(page);
         }

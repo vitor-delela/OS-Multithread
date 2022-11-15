@@ -21,7 +21,7 @@ public class VM {
     m = mem.m;
     gerenteProcesso = new GerenciaProcesso(mem);
 
-    cpu = new CPU(mem,ih,sysCall, true, gerenteProcesso.gerenciaMemoria.tamFrame);  // debug true liga debug
+    cpu = new CPU(mem,ih,sysCall, true, gerenteProcesso.gerenciaMemoria.tamFrame, new int[10]);  // debug true liga debug
   }
 
   public PCB criaProcesso(Word[] p){
