@@ -15,11 +15,9 @@ public class InterruptHandling {
         System.out.println("                                               Interrupcao "+ irpt+ "   pc: "+pc);
         switch (irpt){
             case intEscalonador:
-                System.out.println("From: InterruptHandling -- escalonador.run()");
                 escalonador.run();
                 break;
             case intSTOP:
-                System.out.println("From: InterruptHandling -- int STOP");
                 gerenciadorProcesso.finish(gerenciadorProcesso.getProcessByID(runningPid));
                 if (gerenciadorProcesso.getProntos().size() > 0){
                     if (escalonador.getPosicao()>0) escalonador.setPosicao( escalonador.getPosicao() - 1);

@@ -19,8 +19,7 @@ public class Escalonador {
     }
 
     public void run() {
-        System.out.println("Posição escalonador: " + posicao);
-        System.out.println("tamanho da linked list de prontos = " + prontos.size());
+        System.out.println("-> Posição executada da fila do escalonador: " + posicao);
 
         if (!prontos.isEmpty()) {
             PCB pcb = prontos.get(posicao);
