@@ -11,6 +11,7 @@ import java.util.Queue;
 public class GerenciaProcesso {
     public GerenciaMemoria gerenciaMemoria;
     private Queue<PCB> listaPCBs;
+    private Escalonador escalonador;
 
     public int processId = 0;
 
@@ -38,6 +39,7 @@ public class GerenciaProcesso {
             ++processId;
 
             listaPCBs.add(processControlBlock);
+            escalonador.setProntos(getProntos());
         } else {
             System.out.println("Sem espaço na memória para criar o processo de ID: " + processId);
             processControlBlock = null;
@@ -50,6 +52,7 @@ public class GerenciaProcesso {
         System.out.println("Processo encerrado: " + processo.id);
         gerenciaMemoria.desaloca(processo.getAllocatedPages());
         listaPCBs.remove(processo);
+        escalonador.setProntos(getProntos());
     }
 
     public PCB getProcessByID(int id) {
@@ -77,7 +80,7 @@ public class GerenciaProcesso {
     }
 
     public LinkedList<PCB> getBloqueados(){
-        LinkedList<PCB> bloqueados = null;
+        LinkedList<PCB> bloqueados = new LinkedList<>();
         for(PCB pcb : listaPCBs){
             if (pcb.status == ProcessStatus.BLOCKED) bloqueados.add(pcb);
         }
@@ -110,5 +113,9 @@ public class GerenciaProcesso {
         if (getProcessByID(pid) != null){
             getProcessByID(pid).adicionaNovaPagina(page);
         }
+    }
+
+    public void setEscalonador(Escalonador escalonador) {
+        this.escalonador = escalonador;
     }
 }

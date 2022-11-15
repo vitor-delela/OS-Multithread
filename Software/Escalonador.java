@@ -48,4 +48,20 @@ public class Escalonador {
     public List<PCB> getProntos() {
         return prontos;
     }
+
+    public void setProntos(LinkedList<PCB> prontos) {
+        this.prontos = prontos;
+    }
+
+    public int getPosicao() {
+        return posicao;
+    }
+
+    public void setPosicao(int posicao) {
+        this.posicao = posicao;
+    }
+
+    public CPU getCpu() {
+        return cpu;
+    }
 }

@@ -22,11 +22,14 @@ public class Sistema{   // a VM com tratamento de interrupções
 		escalonador = new Escalonador(vm.gerenteProcesso.getProntos(), vm.cpu);
 
         sysCall.setVM(vm);
-		ih.setEscalonador(escalonador);
+		ih.configInterruptHandling(escalonador, vm.gerenteProcesso);
+		vm.configEscalonador();
     }
 
 	public int carregaPrograma(Word[] programa){
-		return vm.criaProcesso(programa).getId();
+		int response = vm.criaProcesso(programa).getId();
+		//escalonador.setProntos(vm.gerenteProcesso.getProntos());
+		return response;
 	}
 
 	public void encerraProcesso (PCB processo){
@@ -48,10 +51,9 @@ public class Sistema{   // a VM com tratamento de interrupções
 	}
 
 	public void runWithEscalonador() {
-		System.out.println("Iniciando execução dos processos prontos com escalonador");
-		vm.cpu.escalonadorStatus(true);
 		PCB running = null;
-		if (vm.gerenteProcesso.getProntos() != null){
+		if (!vm.gerenteProcesso.getProntos().isEmpty()){
+			vm.cpu.escalonadorStatus(true);
 			running = vm.gerenteProcesso.getProntos().getFirst();
 			vm.cpu.setContext(running.getContexto());
 			vm.cpu.run();

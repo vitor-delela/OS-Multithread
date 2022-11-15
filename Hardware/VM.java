@@ -40,4 +40,8 @@ public class VM {
     return gerenteProcesso.hasProcess(pid);
   }
 
+  public void configEscalonador(){
+    gerenteProcesso.setEscalonador(cpu.getInterruptHandling().getEscalonador());
+  }
+
 }

@@ -103,7 +103,7 @@ public class CPU {
 
     public void run() {
         while (true) { // ciclo de instrucoes. acaba cfe instrucao, veja cada caso.
-            // FETCH
+
             if (legal(pc)) { // pc valido
                 ir = m[pc]; // <<<<<<<<<<<< busca posicao da memoria apontada por pc, guarda em ir
                 if (debug) {
@@ -330,7 +330,10 @@ public class CPU {
                         break;
                 }
             }
-            // --------------------------------------------------------------------------------------------------
+            else{
+                irpt = Interrupts.intEnderecoInvalido;
+            }
+
             // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
             // Verifica Escalonador
             if ((delta == deltaMax) && escalonadorStatus){
@@ -339,8 +342,11 @@ public class CPU {
             }
 
             if (!(irpt == Interrupts.noInterrupt)) { // existe interrupção
-                interruptHandling.handle(irpt, pc); // desvia para rotina de tratamento
-                break; // break sai do loop da cpu
+                interruptHandling.handle(irpt, pc, runningPid); // desvia para rotina de tratamento
+                System.out.println("CURRENTLY INTERRUPT AFTER HANDLE = " + irpt);
+                if ((irpt != Interrupts.intEscalonador) && (irpt != Interrupts.noInterrupt)){
+                    break; // break sai do loop da cpu
+                }
             }
 
         } // FIM DO CICLO DE UMA INSTRUÇÃO
@@ -350,4 +356,7 @@ public class CPU {
         debug = value;
     }
 
+    public InterruptHandling getInterruptHandling() {
+        return interruptHandling;
+    }
 }
