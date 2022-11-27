@@ -6,36 +6,37 @@ import Hardware.Word;
 import java.util.ArrayList;
 
 public class PCB {
-    public int id;
-    public Interrupts interrupt;
-    public ArrayList<Integer> allocatedPages;
     private Contexto contexto;
-    // CPU context
-    public int pc;
+    public Interrupts interrupt;
     public ProcessStatus status;
-    public int[] reg;
+    private int ioValue;
+    //public int id;
+    //public ArrayList<Integer> allocatedPages;
+    //public int pc;
+    //public int[] reg;
 
     public PCB(int _id, ArrayList<Integer> _allocatedPages, int _pc) {
-        this.allocatedPages = _allocatedPages;
-        this.id = _id;
         this.interrupt = Interrupts.noInterrupt;
-        this.pc = _pc;
         this.status = ProcessStatus.READY;
-        this.reg = new int[10];
-        this.contexto = new Contexto(0,1024,allocatedPages,reg, pc, new Word(Opcode.___,-1,-1,-1), id);
+        this.contexto = new Contexto(0,1024,_allocatedPages, new int[10], _pc, new Word(Opcode.___,-1,-1,-1), _id);
+        this.ioValue = -1;
+        // this.allocatedPages = _allocatedPages;
+        // this.id = _id;
+        // this.pc = _pc;
+        // this.reg = new int[10];
     }
 
     //retorna a lista de paginas de um processo
     public ArrayList<Integer> getAllocatedPages() {
-        return this.allocatedPages;
+        return this.contexto.getAllocatedPages();
     }
 
     public int getId() {
-        return this.id;
+        return this.contexto.getProcessId();
     }
 
     public void adicionaNovaPagina(int pagina){
-        allocatedPages.add(pagina);
+        contexto.addAllocatedPage(pagina);
     }
 
     public Contexto getContexto() {
@@ -49,10 +50,26 @@ public class PCB {
     }
 
     public String toString(){
-        return "ID: " + id +
-                "\tPages: " + allocatedPages +
-                "\tProgram Counter: " + pc +
+        return "ID: " + contexto.getProcessId() +
+                "\tPages: " + contexto.getAllocatedPages() +
+                "\tProgram Counter: " + contexto.getProgramCounter() +
                 //"\tStatus: " + status +
                 "\tInterrupts: " + interrupt;
+    }
+
+    public int getIOValue() {
+        return ioValue;
+    }
+
+    public void setIOValue(int ioValue) {
+        this.ioValue = ioValue;
+    }
+
+    public int[] getReg() {
+        return contexto.getRegs();
+    }
+
+    public int getPc() {
+        return contexto.getProgramCounter();
     }
 }

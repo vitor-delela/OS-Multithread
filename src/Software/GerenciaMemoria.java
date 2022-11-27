@@ -5,6 +5,7 @@ import Hardware.Opcode;
 import Hardware.Word;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class GerenciaMemoria {
     public Memory memory;
@@ -116,5 +117,17 @@ public class GerenciaMemoria {
             }
         }
         return -1;
+    }
+
+    public int translate(int logicAddress, ArrayList<Integer> pageTable) {
+        int pageIndex = pageOfPc(logicAddress);
+        int offset = logicAddress % tamPg;
+        int physicalAddress = (pageTable.get(pageIndex) * tamPg) + offset;
+        return physicalAddress;
+    }
+
+    public int pageOfPc(int logicAddress) {
+        int pageIndex = logicAddress / tamPg;
+        return pageIndex;
     }
 }

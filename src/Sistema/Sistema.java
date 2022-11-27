@@ -63,7 +63,7 @@ public class Sistema{   // a VM com tratamento de interrupções
 	}
 
 	public int getProgramCounterbyProcessId(int pid){
-		return vm.gerenteProcesso.getProcessByID(pid).pc;
+		return vm.gerenteProcesso.getProcessByID(pid).getPc();
 	}
 
 	public void listarProcessos(){

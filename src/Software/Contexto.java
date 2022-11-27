@@ -47,8 +47,8 @@ public class Contexto {
         return instrucionRegister;
     }
 
-    public void setAllocatedPages(ArrayList<Integer> allocatedPages) {
-        this.allocatedPages = allocatedPages;
+    public void addAllocatedPage(int pagina) {
+        allocatedPages.add(pagina);
     }
 
     public void setRegs(int[] regs) {

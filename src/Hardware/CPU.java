@@ -2,11 +2,16 @@ package Hardware;
 
 import Software.Contexto;
 import Software.InterruptHandling;
+import Software.PCB;
 import Software.SysCallHandling;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.concurrent.Semaphore;
 
-public class CPU {
+public class CPU extends Thread{
+    public Semaphore SEMA_CPU = new Semaphore(0);
+
     /* valores maximo e minimo para inteiros nesta cpu */
     public int maxInt;
     public int minInt;
@@ -38,6 +43,7 @@ public class CPU {
 
     // ref a MEMORIA e interrupt handler passada na criacao da CPU
     public CPU(Memory _mem, InterruptHandling _interruptHandling, SysCallHandling _sysCall, boolean _debug, int _tamFrame, int[] _regs) {
+        super("CPU");
         maxInt = 32767; // capacidade de representacao modelada
         minInt = -32767; // se exceder deve gerar interrupcao de overflow
         mem = _mem; // usa mem para acessar funcoes auxiliares (dump)
@@ -70,11 +76,6 @@ public class CPU {
         this.escalonadorStatus = flag;
     }
 
-    /*
-     * no futuro esta funcao vai ter que ser expandida para setar todo contexto de execucao,
-     *  agora, setamos somente os registradores base,limite e pc (deve ser zero nesta versao)
-     *  reset da interrupcao registrada
-     */
     public void setContext(Contexto _contexto) {
         this.regs = _contexto.getRegs();
         this.pages = _contexto.getAllocatedPages();
@@ -86,270 +87,261 @@ public class CPU {
         irpt = Interrupts.noInterrupt;
     }
 
-//    public void setContext(int _base, int _limite, int _pc, ArrayList<Integer> _pages, int _runningPid, int[] _registradores) {
-//        base = _base;
-//        limite = _limite;
-//        pc = _pc;
-//        irpt = Interrupts.noInterrupt;
-//        pages = _pages;
-//        runningPid = _runningPid;
-//        regs = _registradores;
-//    }
-
     public int convertePosicaoMemoria(int posicaoPrograma){
         int pageId = pages.get(posicaoPrograma/tamFrame);
         return pageId * tamFrame + (posicaoPrograma % tamFrame);
     }
 
     public void run() {
-        while (true) { // ciclo de instrucoes. acaba cfe instrucao, veja cada caso.
+        while (true){
+            try {
+                // Espera semaforo.
+                SEMA_CPU.acquire();
 
-            if (legal(pc)) { // pc valido
-                ir = m[pc]; // <<<<<<<<<<<< busca posicao da memoria apontada por pc, guarda em ir
-                if (debug) {
-                    System.out.print("                               pc: " + pc + "       exec: ");
-                    mem.dump(ir);
-                }
-
-                delta++;
-
-                // EXECUTA INSTRUCAO NO ir
-                switch (ir.opc) {
-                    // conforme o opcode (código de operação) executa
-                    // Instrucoes de Busca e Armazenamento em Memoria
-                    case LDI: // Rd ← k
-                        regs[ir.r1] = ir.p;
-                        pc++;
-                        break;
-
-                    case LDD: // Rd <- [A]
-                        if (legal(ir.p)) {
-                            regs[ir.r1] = m[convertePosicaoMemoria(ir.p)].p;
-                            //reg[ir.r1] = m[ir.p].p;
-                            pc++;
+                while (true) {
+                    if (legal(pc)) { // pc valido
+                        ir = m[pc]; // busca posicao da memoria apontada por pc, guarda em ir
+                        if (debug) {
+                            System.out.print("                               pc: " + pc + "       exec: ");
+                            mem.dump(ir);
                         }
-                        break;
 
-                    case LDX: // RD <- [RS] // NOVA
-                        if (legal(regs[ir.r2])) {
-                            regs[ir.r1] = m[regs[ir.r2]].p;
-                            pc++;
+                        delta++;
+
+                        // EXECUTA INSTRUCAO NO ir
+                        switch (ir.opc) {
+                            // conforme o opcode (código de operação) executa
+                            // Instrucoes de Busca e Armazenamento em Memoria
+                            case LDI: // Rd ← k
+                                regs[ir.r1] = ir.p;
+                                pc++;
+                                break;
+
+                            case LDD: // Rd <- [A]
+                                if (legal(ir.p)) {
+                                    regs[ir.r1] = m[convertePosicaoMemoria(ir.p)].p;
+                                    //reg[ir.r1] = m[ir.p].p;
+                                    pc++;
+                                }
+                                break;
+
+                            case LDX: // RD <- [RS] // NOVA
+                                if (legal(regs[ir.r2])) {
+                                    regs[ir.r1] = m[regs[ir.r2]].p;
+                                    pc++;
+                                }
+                                break;
+
+                            case STD: // [A] ← Rs
+                                if (legal(ir.p)) {
+                                    m[convertePosicaoMemoria(ir.p)].opc = Opcode.DATA;
+                                    m[convertePosicaoMemoria(ir.p)].p = regs[ir.r1];
+                                    //m[ir.p].opc = Opcode.DATA;
+                                    //m[ir.p].p = reg[ir.r1];
+                                    pc++;
+                                }
+                                ;
+                                break;
+
+                            case STX: // [Rd] ←Rs
+                                if (legal(regs[ir.r1])) {
+                                    m[convertePosicaoMemoria(regs[ir.r1])].opc = Opcode.DATA;
+                                    m[convertePosicaoMemoria(regs[ir.r1])].p = regs[ir.r2];
+                                    //m[reg[ir.r1]].opc = Opcode.DATA;
+                                    //m[reg[ir.r1]].p = reg[ir.r2];
+                                    pc++;
+                                }
+                                ;
+                                break;
+
+                            case MOVE: // RD <- RS
+                                regs[ir.r1] = regs[ir.r2];
+                                pc++;
+                                break;
+
+                            // Instrucoes Aritmeticas
+                            case ADD: // Rd ← Rd + Rs
+                                regs[ir.r1] = regs[ir.r1] + regs[ir.r2];
+                                testOverflow(regs[ir.r1]);
+                                pc++;
+                                break;
+
+                            case ADDI: // Rd ← Rd + k
+                                regs[ir.r1] = regs[ir.r1] + ir.p;
+                                testOverflow(regs[ir.r1]);
+                                pc++;
+                                break;
+
+                            case SUB: // Rd ← Rd - Rs
+                                regs[ir.r1] = regs[ir.r1] - regs[ir.r2];
+                                testOverflow(regs[ir.r1]);
+                                pc++;
+                                break;
+
+                            case SUBI: // RD <- RD - k // NOVA
+                                regs[ir.r1] = regs[ir.r1] - ir.p;
+                                testOverflow(regs[ir.r1]);
+                                pc++;
+                                break;
+
+                            case MULT: // Rd <- Rd * Rs
+                                regs[ir.r1] = regs[ir.r1] * regs[ir.r2];
+                                testOverflow(regs[ir.r1]);
+                                pc++;
+                                break;
+
+                            // Instrucoes JUMP
+                            case JMP: // PC <- k
+                                pc = convertePosicaoMemoria(ir.p);
+                                //pc = ir.p;
+                                break;
+
+                            case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
+                                if (regs[ir.r2] > 0) {
+                                    pc = convertePosicaoMemoria(regs[ir.r1]);
+                                    //pc = reg[ir.r1];
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPIGK: // If RC > 0 then PC <- k else PC++
+                                if (regs[ir.r2] > 0) {
+                                    pc = convertePosicaoMemoria(ir.p);
+                                    //pc = ir.p;
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPILK: // If RC < 0 then PC <- k else PC++
+                                if (regs[ir.r2] < 0) {
+                                    pc = convertePosicaoMemoria(ir.p);
+                                    //pc = ir.p;
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPIEK: // If RC = 0 then PC <- k else PC++
+                                if (regs[ir.r2] == 0) {
+                                    pc = convertePosicaoMemoria(ir.p);
+                                    //pc = ir.p;
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPIL: // if Rc < 0 then PC <- Rs Else PC <- PC +1
+                                if (regs[ir.r2] < 0) {
+                                    pc = convertePosicaoMemoria(regs[ir.r1]);
+                                    //pc = reg[ir.r1];
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPIE: // If Rc = 0 Then PC <- Rs Else PC <- PC +1
+                                if (regs[ir.r2] == 0) {
+                                    pc = convertePosicaoMemoria(regs[ir.r1]);
+                                    //pc = reg[ir.r1];
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPIM: // PC <- [A]
+                                pc = m[convertePosicaoMemoria(ir.p)].p;
+                                //pc = m[ir.p].p;
+                                break;
+
+                            case JMPIGM: // If RC > 0 then PC <- [A] else PC++
+                                if (regs[ir.r2] > 0) {
+                                    //pc = m[convertePosicaoMemoria(ir.p)].p;
+                                    pc = convertePosicaoMemoria(m[convertePosicaoMemoria(ir.p)].p);
+                                    //pc = m[ir.p].p;
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPILM: // If RC < 0 then PC <- k else PC++
+                                if (regs[ir.r2] < 0) {
+                                    //pc = m[convertePosicaoMemoria(ir.p)].p;
+                                    pc = convertePosicaoMemoria(m[convertePosicaoMemoria(ir.p)].p);
+                                    //pc = m[ir.p].p;
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPIEM: // If RC = 0 then PC <- k else PC++
+                                if (regs[ir.r2] == 0) {
+                                    //pc = m[convertePosicaoMemoria(ir.p)].p;
+                                    pc = convertePosicaoMemoria(m[convertePosicaoMemoria(ir.p)].p);
+                                    //pc = m[ir.p].p;
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            case JMPIGT: // If RS>RC then PC <- k else PC++
+                                if (regs[ir.r1] > regs[ir.r2]) {
+                                    pc = convertePosicaoMemoria(ir.p);
+                                    //pc = ir.p;
+                                } else {
+                                    pc++;
+                                }
+                                break;
+
+                            // outras
+                            case STOP: // por enquanto, para execucao
+                                irpt = Interrupts.intSTOP;
+                                break;
+
+                            case DATA:
+                                irpt = Interrupts.intInstrucaoInvalida;
+                                break;
+
+                            // Chamada de sistema
+                            case TRAP:
+                                irpt = Interrupts.intTRAP;
+                                //sysCall.trapHandling(convertePosicaoMemoria(regs[9]), runningPid);
+                                pc++;
+                                break;
+
+                            // Inexistente
+                            default:
+                                irpt = Interrupts.intInstrucaoInvalida;
+                                break;
                         }
-                        break;
+                    }
+                    else{
+                        irpt = Interrupts.intEnderecoInvalido;
+                    }
 
-                    case STD: // [A] ← Rs
-                        if (legal(ir.p)) {
-                            m[convertePosicaoMemoria(ir.p)].opc = Opcode.DATA;
-                            m[convertePosicaoMemoria(ir.p)].p = regs[ir.r1];
-                            //m[ir.p].opc = Opcode.DATA;
-                            //m[ir.p].p = reg[ir.r1];
-                            pc++;
+                    // Verifica Escalonador
+                    if ((delta == deltaMax) && escalonadorStatus){
+                        delta = 0;
+                        irpt = Interrupts.intEscalonador;
+                    }
+
+                    //Verifica interrupção
+                    if (!(irpt == Interrupts.noInterrupt)) { // existe interrupção
+                        interruptHandling.handle(irpt, pc, runningPid); // desvia para rotina de tratamento
+
+                        if ((irpt != Interrupts.intEscalonador) && (irpt != Interrupts.noInterrupt)){
+                            break; // break sai do loop da cpu
                         }
-                        ;
-                        break;
+                    }
 
-                    case STX: // [Rd] ←Rs
-                        if (legal(regs[ir.r1])) {
-                            m[convertePosicaoMemoria(regs[ir.r1])].opc = Opcode.DATA;
-                            m[convertePosicaoMemoria(regs[ir.r1])].p = regs[ir.r2];
-                            //m[reg[ir.r1]].opc = Opcode.DATA;
-                            //m[reg[ir.r1]].p = reg[ir.r2];
-                            pc++;
-                        }
-                        ;
-                        break;
+                } // FIM DO CICLO DE UMA INSTRUÇÃO
 
-                    case MOVE: // RD <- RS
-                        regs[ir.r1] = regs[ir.r2];
-                        pc++;
-                        break;
-
-                    // Instrucoes Aritmeticas
-                    case ADD: // Rd ← Rd + Rs
-                        regs[ir.r1] = regs[ir.r1] + regs[ir.r2];
-                        testOverflow(regs[ir.r1]);
-                        pc++;
-                        break;
-
-                    case ADDI: // Rd ← Rd + k
-                        regs[ir.r1] = regs[ir.r1] + ir.p;
-                        testOverflow(regs[ir.r1]);
-                        pc++;
-                        break;
-
-                    case SUB: // Rd ← Rd - Rs
-                        regs[ir.r1] = regs[ir.r1] - regs[ir.r2];
-                        testOverflow(regs[ir.r1]);
-                        pc++;
-                        break;
-
-                    case SUBI: // RD <- RD - k // NOVA
-                        regs[ir.r1] = regs[ir.r1] - ir.p;
-                        testOverflow(regs[ir.r1]);
-                        pc++;
-                        break;
-
-                    case MULT: // Rd <- Rd * Rs
-                        regs[ir.r1] = regs[ir.r1] * regs[ir.r2];
-                        testOverflow(regs[ir.r1]);
-                        pc++;
-                        break;
-
-                    // Instrucoes JUMP
-                    case JMP: // PC <- k
-                        pc = convertePosicaoMemoria(ir.p);
-                        //pc = ir.p;
-                        break;
-
-                    case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
-                        if (regs[ir.r2] > 0) {
-                            pc = convertePosicaoMemoria(regs[ir.r1]);
-                            //pc = reg[ir.r1];
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPIGK: // If RC > 0 then PC <- k else PC++
-                        if (regs[ir.r2] > 0) {
-                            pc = convertePosicaoMemoria(ir.p);
-                            //pc = ir.p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPILK: // If RC < 0 then PC <- k else PC++
-                        if (regs[ir.r2] < 0) {
-                            pc = convertePosicaoMemoria(ir.p);
-                            //pc = ir.p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPIEK: // If RC = 0 then PC <- k else PC++
-                        if (regs[ir.r2] == 0) {
-                            pc = convertePosicaoMemoria(ir.p);
-                            //pc = ir.p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPIL: // if Rc < 0 then PC <- Rs Else PC <- PC +1
-                        if (regs[ir.r2] < 0) {
-                            pc = convertePosicaoMemoria(regs[ir.r1]);
-                            //pc = reg[ir.r1];
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPIE: // If Rc = 0 Then PC <- Rs Else PC <- PC +1
-                        if (regs[ir.r2] == 0) {
-                            pc = convertePosicaoMemoria(regs[ir.r1]);
-                            //pc = reg[ir.r1];
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPIM: // PC <- [A]
-                        pc = m[convertePosicaoMemoria(ir.p)].p;
-                        //pc = m[ir.p].p;
-                        break;
-
-                    case JMPIGM: // If RC > 0 then PC <- [A] else PC++
-                        if (regs[ir.r2] > 0) {
-                            //pc = m[convertePosicaoMemoria(ir.p)].p;
-                            pc = convertePosicaoMemoria(m[convertePosicaoMemoria(ir.p)].p);
-                            //pc = m[ir.p].p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPILM: // If RC < 0 then PC <- k else PC++
-                        if (regs[ir.r2] < 0) {
-                            //pc = m[convertePosicaoMemoria(ir.p)].p;
-                            pc = convertePosicaoMemoria(m[convertePosicaoMemoria(ir.p)].p);
-                            //pc = m[ir.p].p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPIEM: // If RC = 0 then PC <- k else PC++
-                        if (regs[ir.r2] == 0) {
-                            //pc = m[convertePosicaoMemoria(ir.p)].p;
-                            pc = convertePosicaoMemoria(m[convertePosicaoMemoria(ir.p)].p);
-                            //pc = m[ir.p].p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    case JMPIGT: // If RS>RC then PC <- k else PC++
-                        if (regs[ir.r1] > regs[ir.r2]) {
-                            pc = convertePosicaoMemoria(ir.p);
-                            //pc = ir.p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-
-                    // outras
-                    case STOP: // por enquanto, para execucao
-                        irpt = Interrupts.intSTOP;
-                        break;
-
-                    case DATA:
-                        irpt = Interrupts.intInstrucaoInvalida;
-                        break;
-
-                    // Chamada de sistema
-                    case TRAP:
-                        sysCall.trapHandling(convertePosicaoMemoria(regs[9]), runningPid);
-                        pc++;
-                        break;
-
-                    case SHMALLOC:
-                        sysCall.trapHandling(convertePosicaoMemoria(regs[9]), runningPid);
-                        pc++;
-                        break;
-
-                    case SHMREF:
-                        sysCall.trapHandling(convertePosicaoMemoria(regs[9]), runningPid);
-                        pc++;
-                        break;
-
-                    // Inexistente
-                    default:
-                        irpt = Interrupts.intInstrucaoInvalida;
-                        break;
-                }
+            } catch (InterruptedException error) {
+                error.printStackTrace();
             }
-            else{
-                irpt = Interrupts.intEnderecoInvalido;
-            }
+        }
 
-            // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
-            // Verifica Escalonador
-            if ((delta == deltaMax) && escalonadorStatus){
-                delta = 0;
-                irpt = Interrupts.intEscalonador;
-            }
-
-            if (!(irpt == Interrupts.noInterrupt)) { // existe interrupção
-                interruptHandling.handle(irpt, pc, runningPid); // desvia para rotina de tratamento
-
-                if ((irpt != Interrupts.intEscalonador) && (irpt != Interrupts.noInterrupt)){
-                    break; // break sai do loop da cpu
-                }
-            }
-
-        } // FIM DO CICLO DE UMA INSTRUÇÃO
     }
 
     public void setDebug(boolean value){
@@ -358,5 +350,9 @@ public class CPU {
 
     public InterruptHandling getInterruptHandling() {
         return interruptHandling;
+    }
+
+    public PCB unloadPCB() {
+        return new PCB(runningPid, new ArrayList<Integer>(pages), pc);
     }
 }
