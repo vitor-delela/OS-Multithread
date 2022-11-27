@@ -1,5 +1,6 @@
 package Hardware;
 
+import Sistema.Console;
 import Software.Contexto;
 import Software.InterruptHandling;
 import Software.PCB;
@@ -33,16 +34,16 @@ public class CPU extends Thread{
     public Word[] m; // CPU acessa MEMORIA, guarda referencia a 'm'. m nao muda. sempre será um array de palavras
 
     private InterruptHandling interruptHandling; // significa desvio para rotinas de tratamento de Int - se int ligada, desvia
-    private SysCallHandling sysCall; // significa desvio para tratamento de chamadas de sistema - trap
+    //private SysCallHandling sysCall; // significa desvio para tratamento de chamadas de sistema - trap
     private boolean debug; // se true entao mostra cada instrucao em execucao
 
     // usado pelo escalonador
-    private int delta;
+    private int delta = 0;
     private final int deltaMax = 5;
     public boolean escalonadorStatus;
 
     // ref a MEMORIA e interrupt handler passada na criacao da CPU
-    public CPU(Memory _mem, InterruptHandling _interruptHandling, SysCallHandling _sysCall, boolean _debug, int _tamFrame, int[] _regs) {
+    public CPU(Memory _mem, InterruptHandling _interruptHandling, boolean _debug, int _tamFrame, int[] _regs) {
         super("CPU");
         maxInt = 32767; // capacidade de representacao modelada
         minInt = -32767; // se exceder deve gerar interrupcao de overflow
@@ -50,12 +51,12 @@ public class CPU extends Thread{
         m = mem.m; // usa o atributo 'm' para acessar a memoria.
         //regs = new int[10];
         interruptHandling = _interruptHandling; // aponta para rotinas de tratamento de int
-        sysCall = _sysCall; // aponta para rotinas de tratamento de chamadas de sistema
+       // sysCall = _sysCall; // aponta para rotinas de tratamento de chamadas de sistema
         debug = _debug; // se true, print da instrucao em execucao
         tamFrame = _tamFrame;
 
         this.regs = _regs;// aloca o espaço dos registradores - regs 8 e 9 usados somente para IO
-        escalonadorStatus = false;
+        escalonadorStatus = true;
     }
 
     // _todo acesso a memoria tem que ser verificado
@@ -321,21 +322,29 @@ public class CPU extends Thread{
                     }
 
                     // Verifica Escalonador
-                    if ((delta == deltaMax) && escalonadorStatus){
+                    if ((delta >= deltaMax) && (irpt == Interrupts.noInterrupt)){
                         delta = 0;
                         irpt = Interrupts.intEscalonador;
                     }
 
-                    //Verifica interrupção
-                    if (!(irpt == Interrupts.noInterrupt)) { // existe interrupção
-                        interruptHandling.handle(irpt, pc, runningPid); // desvia para rotina de tratamento
-
-                        if ((irpt != Interrupts.intEscalonador) && (irpt != Interrupts.noInterrupt)){
-                            break; // break sai do loop da cpu
+                    // Segue o loop se nao houve interrupcao.
+                    if (irpt == Interrupts.noInterrupt) {
+                        // Checa se algum IO terminou.
+                        if (Console.FINISHED_IO_PROCESS_IDS.size() > 0) {
+                            irpt = Interrupts.intIO_FINISHED;
+                            break;
                         }
+                        continue;
                     }
 
+                    // Houve interrupcao, deve ser tratada fora do loop.
+                    break;
+
                 } // FIM DO CICLO DE UMA INSTRUÇÃO
+
+                // Trata interrupção.
+                interruptHandling.handle(irpt, pc, runningPid); // desvia para rotina de tratamento
+                delta = 0;
 
             } catch (InterruptedException error) {
                 error.printStackTrace();
@@ -353,6 +362,6 @@ public class CPU extends Thread{
     }
 
     public PCB unloadPCB() {
-        return new PCB(runningPid, new ArrayList<Integer>(pages), pc);
+        return new PCB(runningPid, new ArrayList<Integer>(pages), pc, regs.clone());
     }
 }

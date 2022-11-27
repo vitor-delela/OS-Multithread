@@ -10,20 +10,20 @@ import Software.SysCallHandling;
 
 public class Sistema{   // a VM com tratamento de interrupções
     public VM vm;
-	public Escalonador escalonador;
+	//public Escalonador escalonador;
     public InterruptHandling ih;
-    public SysCallHandling sysCall;
+    //public SysCallHandling sysCall;
     public static Programas progs;
 
     public Sistema() { // a VM com tratamento de interrupções
         ih = new InterruptHandling();
-        sysCall = new SysCallHandling();
-        vm = new VM(ih, sysCall);
-		escalonador = new Escalonador(vm.gerenteProcesso.getProntos(), vm.cpu);
+        //sysCall = new SysCallHandling();
+        vm = new VM(ih);
+		//escalonador = new Escalonador(vm.gerenteProcesso.getProntos(), vm.cpu);
 
-        sysCall.setVM(vm);
-		ih.configInterruptHandling(escalonador, vm.gerenteProcesso);
-		vm.configEscalonador();
+        //sysCall.setVM(vm);
+		ih.configInterruptHandling(vm.gerenteProcesso, vm.cpu);
+		//vm.configEscalonador();
     }
 
 	public int carregaPrograma(Word[] programa){

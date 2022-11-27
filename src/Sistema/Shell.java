@@ -1,69 +1,94 @@
 package Sistema;
 
+import Hardware.VM;
+import Programas.Programas;
 import Software.GerenciaProcesso;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
+
 import static Sistema.Sistema.progs;
 
 public class Shell extends Thread {
 
     private Scanner scanner;
     private GerenciaProcesso gerenciaProcesso;
+    public static Semaphore SEMA_SHELL = new Semaphore(1);
 
-    public Shell(GerenciaProcesso gerenciaProcesso) {
+    public Shell(GerenciaProcesso gp) {
         super("Shell");
         this.scanner = new Scanner(System.in);
-        this.gerenciaProcesso = gerenciaProcesso;
+        this.gerenciaProcesso = gp;
+        //this.vm = vm;
     }
 
     @Override
     public void run() {
-        System.out.println("\nEscolha o programa:");
-        System.out.println("1 - Fibonacci");
-        System.out.println("2 - FibonacciTRAP");
-        System.out.println("3 - Fatorial");
-        System.out.println("4 - FatorialTRAP");
-        System.out.println("5 - ProgMinimo");
-        System.out.println("6 - PB");
-        System.out.println("7 - PC");
-        System.out.println("9 - Exit");
-        System.out.print("Programa: ");
-        int aux2;
-        System.out.println("\n[SHELL] - esperando input do usuário...\n");
-        aux2 = scanner.nextInt();
-        System.out.println("\n[SHELL] - recebeu o input do usuário [OK]\n");
-        int id;
+        while (true){
+            try {
+                SEMA_SHELL.acquire();
+                System.out.println("\n[SHELL] - Escolha o programa:");
+                System.out.println("1 - Fibonacci");
+                System.out.println("2 - FibonacciTRAP");
+                System.out.println("3 - Fatorial");
+                System.out.println("4 - FatorialTRAP");
+                System.out.println("5 - ProgMinimo");
+                System.out.println("6 - PB");
+                System.out.println("7 - PC");
+                System.out.println("8 - Test In");
+                System.out.println("9 - Test Out");
+                System.out.println("0 - Exit");
+                int aux2;
+                System.out.println("\n[SHELL] - Esperando input do usuário: ");
+                aux2 = scanner.nextInt();
+                System.out.println("\n[SHELL] - recebeu o input do usuário [OK]\n");
+                int id;
 
-        switch (aux2) {
-            case 1:
-                id = gerenciaProcesso.create(progs.fibonacci10).getId();
-                System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                break;
-            case 2:
-                id = gerenciaProcesso.create(progs.fibonacciTRAP).getId();
-                System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                break;
-            case 3:
-                id = gerenciaProcesso.create(progs.fatorial).getId();
-                System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                break;
-            case 4:
-                id = gerenciaProcesso.create(progs.fatorialTRAP).getId();
-                System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                break;
-            case 5:
-                id = gerenciaProcesso.create(progs.progMinimo).getId();
-                System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                break;
-            case 6:
-                id = gerenciaProcesso.create(progs.PB).getId();
-                System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                break;
-            case 7:
-                id = gerenciaProcesso.create(progs.PC).getId();
-                System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                break;
-            default:
-                break;
+                switch (aux2) {
+                    case 1:
+                        id = (gerenciaProcesso.create(Programas.fibonacci10.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0 ? "Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 2:
+                        id = (gerenciaProcesso.create(Programas.fibonacciTRAP.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 3:
+                        id = (gerenciaProcesso.create(Programas.fatorial.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 4:
+                        id = (gerenciaProcesso.create(Programas.fatorialTRAP.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 5:
+                        id = (gerenciaProcesso.create(Programas.progMinimo.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 6:
+                        id = (gerenciaProcesso.create(Programas.PB.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 7:
+                        id = (gerenciaProcesso.create(Programas.PC.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 8:
+                        id = (gerenciaProcesso.create(Programas.testIn.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 9:
+                        id = (gerenciaProcesso.create(Programas.testOut.getProgramCode())).getId();
+                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
+                        break;
+                    case 0:
+                        System.exit(0);
+                        break;
+                    default:
+                        break;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

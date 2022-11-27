@@ -1,7 +1,7 @@
 package Hardware;
 
 import Sistema.Console;
-import Sistema.Dispatcher;
+import Software.Escalonador_Conc;
 import Sistema.Shell;
 import Software.GerenciaProcesso;
 import Software.InterruptHandling;
@@ -18,22 +18,23 @@ public class VM {
   public GerenciaProcesso gerenteProcesso;
 
   private Shell shell;
-  private Dispatcher dispatcher;
+  private Escalonador_Conc dispatcher;
   private Console console;
   
-  public VM(InterruptHandling ih, SysCallHandling sysCall){
+  public VM(InterruptHandling ih){
     mem = new Memory(tamMem);
     m = mem.m;
     gerenteProcesso = new GerenciaProcesso(mem);
 
-    cpu = new CPU(mem,ih,sysCall, true, gerenteProcesso.gerenciaMemoria.tamFrame, new int[10]);  // debug true liga debug
+    cpu = new CPU(mem,ih, true, gerenteProcesso.gerenciaMemoria.tamFrame, new int[10]);  // debug true liga debug
 
     shell = new Shell(gerenteProcesso);
-    dispatcher = new Dispatcher(cpu, gerenteProcesso);
+    dispatcher = new Escalonador_Conc(cpu, gerenteProcesso);
     console = new Console(cpu, gerenteProcesso);
   }
 
   public PCB criaProcesso(Word[] p){
+    System.out.println("entrou");
     return gerenteProcesso.create(p);
   }
 
@@ -49,9 +50,9 @@ public class VM {
     return gerenteProcesso.hasProcess(pid);
   }
 
-  public void configEscalonador(){
-    gerenteProcesso.setEscalonador(cpu.getInterruptHandling().getEscalonador());
-  }
+//  public void configEscalonador(){
+//    gerenteProcesso.setEscalonador(cpu.getInterruptHandling().getEscalonador());
+//  }
 
   public void startThreads() {
     shell.start();

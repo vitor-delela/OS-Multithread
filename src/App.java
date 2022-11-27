@@ -12,6 +12,8 @@ public class App {
 		Sistema s = new Sistema();
 		Scanner in = new Scanner(System.in);
 
+		s.vm.startThreads();
+		/*
 		while (true) {
 			System.out.println("\nEscolha uma opção:");
 			System.out.println("1 - Cria"); //cria um processo na memória. Pede ao GM para alocar frames de memória necessários. cria PCB, seta tabela de páginas do processo no PCB, etc. coloca processo em uma lista de processos (prontos).
@@ -135,6 +137,8 @@ public class App {
 					System.exit(0);
 
 			}
-		}
+		}*/
+
+
 	}
 }

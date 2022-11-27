@@ -47,16 +47,8 @@ public class Console extends Thread {
 
     private void read(PCB process) {
         System.out.println("\n[Process ID = " + process.getId() + " - READ] [CONSOLE] - Esperando input do usuário...:\n");
-        String inputAsString = reader.nextLine();
+        int input = reader.nextInt();
         System.out.println("\n[CONSOLE] - Recebeu o input do usuário [OK]\n");
-        int input;
-        try {
-            input = Integer.parseInt(inputAsString);
-        } catch (NumberFormatException error) {
-            System.out
-                    .println("\n[Console] O valor de IO digitado não é um número, será usado o valor -1 neste caso.\n");
-            input = -1;
-        }
         process.setIOValue(input);
         addFinishedIOProcessId(process.getId());
         removeIORequest(process.getId());
@@ -72,7 +64,7 @@ public class Console extends Thread {
         process.setIOValue(output);
         addFinishedIOProcessId(process.getId());
         removeIORequest(process.getId());
-        if (gerenteProcesso.getProntos().size() <= 0) {
+        if (gerenteProcesso.READY_LIST.size() <= 0) {
             cpu.getInterruptHandling().noOtherProcessRunningRoutine();
         }
     }

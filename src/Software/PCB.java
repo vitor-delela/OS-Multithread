@@ -26,6 +26,17 @@ public class PCB {
         // this.reg = new int[10];
     }
 
+    public PCB(int _id, ArrayList<Integer> _allocatedPages, int _pc, int[] reg) {
+        this.interrupt = Interrupts.noInterrupt;
+        this.status = ProcessStatus.READY;
+        this.contexto = new Contexto(0,1024,_allocatedPages, reg, _pc, new Word(Opcode.___,-1,-1,-1), _id);
+        this.ioValue = -1;
+        // this.allocatedPages = _allocatedPages;
+        // this.id = _id;
+        // this.pc = _pc;
+        // this.reg = new int[10];
+    }
+
     //retorna a lista de paginas de um processo
     public ArrayList<Integer> getAllocatedPages() {
         return this.contexto.getAllocatedPages();

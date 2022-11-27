@@ -3,7 +3,6 @@ package Software;
 import Hardware.Memory;
 import Hardware.Opcode;
 import Hardware.Word;
-import Sistema.Dispatcher;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -12,7 +11,7 @@ import java.util.Queue;
 public class GerenciaProcesso {
     public GerenciaMemoria gerenciaMemoria;
     private Queue<PCB> listaPCBs;
-    private Escalonador escalonador;
+    //private Escalonador escalonador;
 
     public static LinkedList<PCB> READY_LIST = new LinkedList<>();
     public static LinkedList<PCB> BLOCKED_LIST = new LinkedList<>();
@@ -26,7 +25,6 @@ public class GerenciaProcesso {
     }
 
     public PCB create(Word[] p) {
-        System.out.println("Novo processo sendo criado...");
         PCB processControlBlock;
 
         int tamanhoAlocar = p.length;
@@ -43,13 +41,15 @@ public class GerenciaProcesso {
             processControlBlock = new PCB(processId, paginas, (paginas.get(0)*gerenciaMemoria.tamFrame));
             ++processId;
 
+            System.out.println("Novo processo criado: " + processControlBlock.getId());
+
             listaPCBs.add(processControlBlock);
             READY_LIST.add(processControlBlock);
-            escalonador.setProntos(getProntos());
+            //escalonador.setProntos(getProntos());
 
             // Libera dispatcher se nao tem processo rodando.
             if (READY_LIST.size() == 1 && RUNNING == null) {
-                Dispatcher.SEMA_DISPATCHER.release();
+                Escalonador_Conc.SEMA_ESCALONADOR.release();
             }
         } else {
             System.out.println("Sem espaço na memória para criar o processo de ID: " + processId);
@@ -66,15 +66,15 @@ public class GerenciaProcesso {
         }
         gerenciaMemoria.desaloca(processo.getAllocatedPages());
         listaPCBs.remove(processo);
-        escalonador.setProntos(getProntos());
+        //escalonador.setProntos(getProntos());
 
         for (int i = 0; i < READY_LIST.size(); i++) {
-            if (READY_LIST.get(i).getId() == processId) {
+            if (READY_LIST.get(i).getId() == processo.getId()) {
                 READY_LIST.remove(i);
             }
         }
         for (int i = 0; i < BLOCKED_LIST.size(); i++) {
-            if (BLOCKED_LIST.get(i).getId() == processId) {
+            if (BLOCKED_LIST.get(i).getId() == processo.getId()) {
                 BLOCKED_LIST.remove(i);
             }
         }
@@ -149,7 +149,7 @@ public class GerenciaProcesso {
         }
     }
 
-    public void setEscalonador(Escalonador escalonador) {
-        this.escalonador = escalonador;
-    }
+//    public void setEscalonador(Escalonador escalonador) {
+//        this.escalonador = escalonador;
+//    }
 }

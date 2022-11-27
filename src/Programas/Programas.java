@@ -7,8 +7,9 @@ import Hardware.Word;
 // --------------- esta classe representa programas armazenados (como se estivessem em disco) que podem ser carregados para a memória (load faz isto)  --------------- //
 
 public class Programas {
+
         // este fatorial so aceita valores positivos. nao pode ser zero
-        public Word[] fatorial = new Word[] {
+        public static Program fatorial = new Program("Fatorial", new Word[]{ // este fatorial so aceita valores
                 new Word(Opcode.LDI, 0, -1, 5), // 0 r0 é valor a calcular fatorial
                 new Word(Opcode.LDI, 1, -1, 1), // 1 r1 é 1 para multiplicar (por r0)
                 new Word(Opcode.LDI, 6, -1, 1), // 2 r6 é 1 para ser o decremento
@@ -20,20 +21,21 @@ public class Programas {
                 new Word(Opcode.STD, 1, -1, 10), // 8 coloca valor de r1 na posição 10
                 new Word(Opcode.STOP, -1, -1, -1), // 9 stop
                 new Word(Opcode.DATA, -1, -1, -1) // 10 ao final o valor do fatorial estará na posição 10 da memória
-        };
+        } );
 
-        public Word[] progMinimo = new Word[] {
+
+        public static Program progMinimo = new Program("progMinimo", new Word[]{ // este fatorial so aceita valores
                 new Word(Opcode.LDI, 0, -1, 999),
-                new Word(Opcode.STD, 0, -1, 10),
-                new Word(Opcode.STD, 0, -1, 11),
-                new Word(Opcode.STD, 0, -1, 12),
-                new Word(Opcode.STD, 0, -1, 13),
-                new Word(Opcode.STD, 0, -1, 14),
+                new Word(Opcode.STD, 0, -1, 6),
+                new Word(Opcode.STD, 0, -1, 7),
+                new Word(Opcode.STD, 0, -1, 8),
+                new Word(Opcode.STD, 0, -1, 9),
                 new Word(Opcode.STOP, -1, -1, -1)
-        };
+        } );
 
-         // mesmo que prog exemplo, so que usa r0 no lugar de r8
-        public Word[] fibonacci10 = new Word[] {
+
+        // mesmo que prog exemplo, so que usa r0 no lugar de r8
+        public static Program fibonacci10 = new Program("fibonacci10", new Word[]{ // este fatorial so aceita valores
                 new Word(Opcode.LDI, 1, -1, 0),
                 new Word(Opcode.STD, 1, -1, 20),
                 new Word(Opcode.LDI, 2, -1, 1),
@@ -64,10 +66,11 @@ public class Programas {
                 new Word(Opcode.DATA, -1, -1, -1),
                 new Word(Opcode.DATA, -1, -1, -1),
                 new Word(Opcode.DATA, -1, -1, -1)
-        }; 
+        });
         // ate aqui - serie de fibonacci ficara armazenada
 
-        public Word[] fatorialTRAP = new Word[] {
+
+        public static Program fatorialTRAP = new Program("fatorialTRAP", new Word[]{ // este fatorial so aceita valores
                 new Word(Opcode.LDI, 0, -1, 5), // numero para colocar na memoria
                 new Word(Opcode.STD, 0, -1, 50),
                 new Word(Opcode.LDD, 0, -1, 50),
@@ -87,10 +90,11 @@ public class Programas {
                 new Word(Opcode.TRAP, -1, -1, -1),
                 new Word(Opcode.STOP, -1, -1, -1), // POS 17
                 new Word(Opcode.DATA, -1, -1, -1) // POS 18
-        };
+        } );
+
 
         // mesmo que prog exemplo, so que usa r0 no lugar de r8
-        public Word[] fibonacciTRAP = new Word[] { 
+        public static Program fibonacciTRAP = new Program("fibonacciTRAP", new Word[]{ // este fatorial so aceita valores
                 new Word(Opcode.LDI, 8, -1, 1), // leitura
                 new Word(Opcode.LDI, 9, -1, 100), // endereco a guardar
                 new Word(Opcode.TRAP, -1, -1, -1),
@@ -146,12 +150,15 @@ public class Programas {
                 new Word(Opcode.DATA, -1, -1, -1),
                 new Word(Opcode.DATA, -1, -1, -1),
                 new Word(Opcode.DATA, -1, -1, -1)
-        };
+        } );
+
+
+
 
         // dado um inteiro em alguma posição de memória,
         // se for negativo armazena -1 na saída; se for positivo responde o fatorial do
         // número na saída
-        public Word[] PB = new Word[] {
+        public static Program PB = new Program("PB", new Word[]{ // este fatorial so aceita valores
                 new Word(Opcode.LDI, 0, -1, 7), // numero para colocar na memoria
                 new Word(Opcode.STD, 0, -1, 50),
                 new Word(Opcode.LDD, 0, -1, 50),
@@ -168,7 +175,10 @@ public class Programas {
                 new Word(Opcode.STD, 1, -1, 15),
                 new Word(Opcode.STOP, -1, -1, -1), // POS 14
                 new Word(Opcode.DATA, -1, -1, -1) // POS 15
-        };
+        } );
+
+
+
 
         // Para um N definido (10 por exemplo)
                         // o programa ordena um vetor de N números em alguma posição de memória;
@@ -176,7 +186,7 @@ public class Programas {
                         // loop ate que não swap nada
                         // passando pelos N valores
                         // faz swap de vizinhos se da esquerda maior que da direita
-        public Word[] PC = new Word[] {
+        public static Program PC = new Program("PC", new Word[]{ // este fatorial so aceita valores
                 new Word(Opcode.LDI, 7, -1, 10), // TAMANHO DO BUBBLE SORT (N)
                 new Word(Opcode.LDI, 6, -1, 5), // aux N
                 new Word(Opcode.LDI, 5, -1, 46), // LOCAL DA MEMORIA
@@ -231,5 +241,27 @@ public class Programas {
                 new Word(Opcode.DATA, -1, -1, -1),
                 new Word(Opcode.DATA, -1, -1, -1),
                 new Word(Opcode.DATA, -1, -1, -1)
-        };
+        } );
+
+
+
+        // Programa para testar a instrucao TRAP com entrada.
+        public static Program testIn = new Program("Test In",
+                new Word[] { new Word(Opcode.LDI, 7, -1, 1), new Word(Opcode.LDI, 8, -1, 4),
+                        new Word(Opcode.TRAP, -1, -1, -1), new Word(Opcode.STOP, -1, -1, -1),
+
+                        new Word(Opcode.DATA, -1, -1, -1) // Onde sera armazenado o resultado
+                });
+
+        // Programa para testar a instrucao TRAP com saida.
+        public static Program testOut = new Program("Test Out",
+                new Word[] { new Word(Opcode.LDI, 7, -1, 2), new Word(Opcode.LDI, 8, -1, 6),
+                        new Word(Opcode.LDI, 1, -1, 800), new Word(Opcode.STD, 1, -1, 6),
+                        new Word(Opcode.TRAP, -1, -1, -1),
+                        new Word(Opcode.STOP, -1, -1, -1),
+
+                        new Word(Opcode.DATA, -1, -1, -1) // Onde sera armazenado o resultado
+                });
+
+
 }
