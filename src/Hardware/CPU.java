@@ -2,6 +2,7 @@ package Hardware;
 
 import Sistema.Console;
 import Software.Contexto;
+import Software.GerenciaMemoria;
 import Software.InterruptHandling;
 import Software.PCB;
 
@@ -87,8 +88,20 @@ public class CPU extends Thread{
     }
 
     public int convertePosicaoMemoria(int posicaoPrograma){
-        int pageId = pages.get(posicaoPrograma/tamFrame);
+        int pageId = pages.get((posicaoPrograma)/tamFrame);
         return pageId * tamFrame + (posicaoPrograma % tamFrame);
+    }
+
+    public int translate(int logicAddress, ArrayList<Integer> pageTable) {
+        int pageIndex = pageOfPc(logicAddress);
+        int offset = logicAddress % tamFrame;
+        int physicalAddress = (pageTable.get(pageIndex) * tamFrame) + offset;
+        return physicalAddress;
+    }
+
+    public int pageOfPc(int logicAddress) {
+        int pageIndex = logicAddress / tamFrame;
+        return pageIndex;
     }
 
     public void run() {

@@ -52,8 +52,8 @@ public class GerenciaMemoria {
 
         for(Word w : p){
             if (w.opc.equals(Opcode.LDD) || w.opc.equals(Opcode.STD))
-                if (w.p > tamanhoAlocar)
-                    tamanhoAlocar = w.p;
+                if (w.p >= tamanhoAlocar)
+                    tamanhoAlocar = (w.p)+1;
         }
 
         //System.out.println("Alocadas " + tamanhoAlocar + " posicoes...");

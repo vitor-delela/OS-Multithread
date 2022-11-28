@@ -39,7 +39,6 @@ public class InterruptHandling {
                 break;
             case intInstrucaoInvalida:
                 System.out.println("Instrucao invalida: a instrucao carregada é invalida.");
-                System.exit(0);
                 encerraProcesso();
                 break;
             case intOverflow:

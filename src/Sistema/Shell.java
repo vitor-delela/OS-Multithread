@@ -28,14 +28,11 @@ public class Shell extends Thread {
                 SEMA_SHELL.acquire();
                 System.out.println("\n[SHELL] - Escolha o programa:");
                 System.out.println("1 - Fibonacci");
-                System.out.println("2 - FibonacciTRAP");
-                System.out.println("3 - Fatorial");
-                System.out.println("4 - FatorialTRAP");
-                System.out.println("5 - ProgMinimo");
-                System.out.println("6 - PB");
-                System.out.println("7 - PC");
-                System.out.println("8 - Test In");
-                System.out.println("9 - Test Out");
+                System.out.println("2 - Fatorial");
+                System.out.println("3 - ProgMinimo");
+                System.out.println("4 - PB");
+                System.out.println("5 - Test In");
+                System.out.println("6 - Test Out");
                 System.out.println("0 - Exit");
                 int aux2;
                 System.out.println("\n[SHELL] - Esperando input do usuário: ");
@@ -49,34 +46,22 @@ public class Shell extends Thread {
                         if (id < 0) System.out.println((id<0 ? "Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
                         break;
                     case 2:
-                        id = (gerenciaProcesso.create(Programas.fibonacciTRAP.getProgramCode())).getId();
-                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                        break;
-                    case 3:
                         id = (gerenciaProcesso.create(Programas.fatorial.getProgramCode())).getId();
                         if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
                         break;
-                    case 4:
-                        id = (gerenciaProcesso.create(Programas.fatorialTRAP.getProgramCode())).getId();
-                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                        break;
-                    case 5:
+                    case 3:
                         id = (gerenciaProcesso.create(Programas.progMinimo.getProgramCode())).getId();
                         if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
                         break;
-                    case 6:
+                    case 4:
                         id = (gerenciaProcesso.create(Programas.PB.getProgramCode())).getId();
                         if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
                         break;
-                    case 7:
-                        id = (gerenciaProcesso.create(Programas.PC.getProgramCode())).getId();
-                        if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
-                        break;
-                    case 8:
+                    case 5:
                         id = (gerenciaProcesso.create(Programas.testIn.getProgramCode())).getId();
                         if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
                         break;
-                    case 9:
+                    case 6:
                         id = (gerenciaProcesso.create(Programas.testOut.getProgramCode())).getId();
                         if (id < 0) System.out.println((id<0?"Não foi possível criar o processo.": "Processo criado - Identificador do Processo: " + id));
                         break;
@@ -89,6 +74,7 @@ public class Shell extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            SEMA_SHELL = new Semaphore(0);
         }
     }
 }

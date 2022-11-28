@@ -160,8 +160,8 @@ public class Programas {
         // número na saída
         public static Program PB = new Program("PB", new Word[]{ // este fatorial so aceita valores
                 new Word(Opcode.LDI, 0, -1, 7), // numero para colocar na memoria
-                new Word(Opcode.STD, 0, -1, 50),
-                new Word(Opcode.LDD, 0, -1, 50),
+                new Word(Opcode.STD, 0, -1, 16),
+                new Word(Opcode.LDD, 0, -1, 16),
                 new Word(Opcode.LDI, 1, -1, -1),
                 new Word(Opcode.LDI, 2, -1, 13), // SALVAR POS STOP
                 new Word(Opcode.JMPIL, 2, 0, -1), // caso negativo pula pro STD
