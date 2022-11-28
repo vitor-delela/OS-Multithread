@@ -17,8 +17,8 @@ public class Console extends Thread {
     private Scanner reader;
     private GerenciaProcesso gerenteProcesso;
 
-    public static LinkedList<IORequest> IO_REQUESTS = new LinkedList<>();
-    public static LinkedList<Integer> FINISHED_IO_PROCESS_IDS = new LinkedList<>();
+    public static LinkedList<IORequest> requisicoesIO = new LinkedList<>();
+    public static LinkedList<Integer> IOsCompletasPIDs = new LinkedList<>();
 
     public Console(CPU cpu, GerenciaProcesso gerenteProcesso) {
         super("Console");
@@ -33,7 +33,7 @@ public class Console extends Thread {
             try {
                 SEMA_CONSOLE.acquire();
                 // Entrou algum processo bloqueado.
-                IORequest ioRequest = IO_REQUESTS.removeFirst();
+                IORequest ioRequest = requisicoesIO.removeFirst();
                 if (ioRequest.getOperationType() == IORequest.OperationTypes.READ) {
                     read(ioRequest.getProcess());
                 } else {
@@ -50,39 +50,39 @@ public class Console extends Thread {
         int input = reader.nextInt();
         System.out.println("\n[CONSOLE] - Recebeu o input do usuário [OK]\n");
         process.setIOValue(input);
-        addFinishedIOProcessId(process.getId());
+        addCompletedIO(process.getId());
         removeIORequest(process.getId());
         if (gerenteProcesso.getProntos().size() <= 0) {
-            cpu.getInterruptHandling().noOtherProcessRunningRoutine();
+            cpu.getInterruptHandling().rotinaSemProcessosListados();
         }
     }
 
     private void write(PCB process) {
         System.out.println("\n[Process ID = " + process.getId() + " - WRITE]\n");
-        int physicalAddress = gerenteProcesso.gerenciaMemoria.translate(process.getReg()[8], process.getAllocatedPages());
-        int output = cpu.m[physicalAddress].p;
+        int endereco = gerenteProcesso.gerenciaMemoria.translate(process.getReg()[8], process.getAllocatedPages());
+        int output = cpu.m[endereco].p;
         process.setIOValue(output);
-        addFinishedIOProcessId(process.getId());
+        addCompletedIO(process.getId());
         removeIORequest(process.getId());
-        if (gerenteProcesso.READY_LIST.size() <= 0) {
-            cpu.getInterruptHandling().noOtherProcessRunningRoutine();
+        if (gerenteProcesso.ListaProntos.size() <= 0) {
+            cpu.getInterruptHandling().rotinaSemProcessosListados();
         }
+    }
+
+    public static void addCompletedIO(int id) {
+        IOsCompletasPIDs.add(id);
+    }
+
+    public static int getFirstIOProcessId() {
+        return IOsCompletasPIDs.removeFirst();
     }
 
     private static void removeIORequest(int processId) {
-        for (int i = 0; i < IO_REQUESTS.size(); i++) {
-            if (IO_REQUESTS.get(i).getProcess().getId() == processId) {
-                IO_REQUESTS.remove(i);
+        for (int i = 0; i < requisicoesIO.size(); i++) {
+            if (requisicoesIO.get(i).getProcess().getId() == processId) {
+                requisicoesIO.remove(i);
             }
         }
-    }
-
-    public static void addFinishedIOProcessId(int id) {
-        FINISHED_IO_PROCESS_IDS.add(id);
-    }
-
-    public static int getFirstFinishedIOProcessId() {
-        return FINISHED_IO_PROCESS_IDS.removeFirst();
     }
 
 }

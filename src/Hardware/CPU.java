@@ -4,10 +4,8 @@ import Sistema.Console;
 import Software.Contexto;
 import Software.InterruptHandling;
 import Software.PCB;
-import Software.SysCallHandling;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
 
 public class CPU extends Thread{
@@ -330,7 +328,7 @@ public class CPU extends Thread{
                     // Segue o loop se nao houve interrupcao.
                     if (irpt == Interrupts.noInterrupt) {
                         // Checa se algum IO terminou.
-                        if (Console.FINISHED_IO_PROCESS_IDS.size() > 0) {
+                        if (Console.IOsCompletasPIDs.size() > 0) {
                             irpt = Interrupts.intIO_FINISHED;
                             break;
                         }

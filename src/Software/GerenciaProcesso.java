@@ -10,18 +10,16 @@ import java.util.Queue;
 
 public class GerenciaProcesso {
     public GerenciaMemoria gerenciaMemoria;
-    private Queue<PCB> listaPCBs;
-    //private Escalonador escalonador;
-
-    public static LinkedList<PCB> READY_LIST = new LinkedList<>();
-    public static LinkedList<PCB> BLOCKED_LIST = new LinkedList<>();
-    public static PCB RUNNING = null;
+    private Queue<PCB> listaTodosPCBs;
+    public static LinkedList<PCB> ListaProntos = new LinkedList<>();
+    public static LinkedList<PCB> ListaBloqueados = new LinkedList<>();
+    public static PCB EmExecucao = null;
 
     public int processId = 0;
 
     public GerenciaProcesso(Memory memory) {
         this.gerenciaMemoria = new GerenciaMemoria(memory);
-        this.listaPCBs = new LinkedList<>();
+        this.listaTodosPCBs = new LinkedList<>();
     }
 
     public PCB create(Word[] p) {
@@ -36,19 +34,17 @@ public class GerenciaProcesso {
         }
 
         if (gerenciaMemoria.temEspacoParaAlocar(tamanhoAlocar)) {
-            //System.out.println("Alocando espaço para: " + p.length + " palavras...");
             ArrayList<Integer> paginas = gerenciaMemoria.aloca(p);
             processControlBlock = new PCB(processId, paginas, (paginas.get(0)*gerenciaMemoria.tamFrame));
             ++processId;
 
             System.out.println("Novo processo criado: " + processControlBlock.getId());
 
-            listaPCBs.add(processControlBlock);
-            READY_LIST.add(processControlBlock);
-            //escalonador.setProntos(getProntos());
+            listaTodosPCBs.add(processControlBlock);
+            ListaProntos.add(processControlBlock);
 
-            // Libera dispatcher se nao tem processo rodando.
-            if (READY_LIST.size() == 1 && RUNNING == null) {
+            // Libera escalonador se nao tem processo rodando
+            if (ListaProntos.size() == 1 && EmExecucao == null) {
                 Escalonador_Conc.SEMA_ESCALONADOR.release();
             }
         } else {
@@ -65,23 +61,23 @@ public class GerenciaProcesso {
             gerenciaMemoria.memory.dump(page*16, (page+1)*16);
         }
         gerenciaMemoria.desaloca(processo.getAllocatedPages());
-        listaPCBs.remove(processo);
+        listaTodosPCBs.remove(processo);
         //escalonador.setProntos(getProntos());
 
-        for (int i = 0; i < READY_LIST.size(); i++) {
-            if (READY_LIST.get(i).getId() == processo.getId()) {
-                READY_LIST.remove(i);
+        for (int i = 0; i < ListaProntos.size(); i++) {
+            if (ListaProntos.get(i).getId() == processo.getId()) {
+                ListaProntos.remove(i);
             }
         }
-        for (int i = 0; i < BLOCKED_LIST.size(); i++) {
-            if (BLOCKED_LIST.get(i).getId() == processo.getId()) {
-                BLOCKED_LIST.remove(i);
+        for (int i = 0; i < ListaBloqueados.size(); i++) {
+            if (ListaBloqueados.get(i).getId() == processo.getId()) {
+                ListaBloqueados.remove(i);
             }
         }
     }
 
     public PCB getProcessByID(int id) {
-        for (PCB pcb : listaPCBs){
+        for (PCB pcb : listaTodosPCBs){
             if (pcb.getId() == id){
                 return pcb;
             }
@@ -90,9 +86,9 @@ public class GerenciaProcesso {
     }
 
     public static PCB getBlockedProcessById(int id) {
-        for (int i = 0; i < BLOCKED_LIST.size(); i++) {
-            if (BLOCKED_LIST.get(i).getId() == id) {
-                return BLOCKED_LIST.remove(i);
+        for (int i = 0; i < ListaBloqueados.size(); i++) {
+            if (ListaBloqueados.get(i).getId() == id) {
+                return ListaBloqueados.remove(i);
             }
         }
         return null;
@@ -100,25 +96,17 @@ public class GerenciaProcesso {
 
     public void listAllProcesses(){
         System.out.println("Processos: ");
-        for(PCB pcb : listaPCBs){
+        for(PCB pcb : listaTodosPCBs){
             System.out.println(pcb.toString());
         }
     }
 
     public LinkedList<PCB> getProntos(){
-        LinkedList<PCB> prontos = new LinkedList<>();
-        for(PCB pcb : listaPCBs){
-            if (pcb.status == ProcessStatus.READY) prontos.add(pcb);
-        }
-        return prontos;
+        return ListaProntos;
     }
 
     public LinkedList<PCB> getBloqueados(){
-        LinkedList<PCB> bloqueados = new LinkedList<>();
-        for(PCB pcb : listaPCBs){
-            if (pcb.status == ProcessStatus.BLOCKED) bloqueados.add(pcb);
-        }
-        return bloqueados;
+        return ListaBloqueados;
     }
 
     public int getProcessLineFromMemory(int line, int processId){
@@ -127,7 +115,7 @@ public class GerenciaProcesso {
     }
 
     public boolean hasProcess(int pid){
-        for(PCB pcb : listaPCBs)
+        for(PCB pcb : listaTodosPCBs)
             if (pcb.getId() == pid) return true;
         return false;
     }
@@ -149,7 +137,4 @@ public class GerenciaProcesso {
         }
     }
 
-//    public void setEscalonador(Escalonador escalonador) {
-//        this.escalonador = escalonador;
-//    }
 }
